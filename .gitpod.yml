@@ -1,0 +1,59 @@
+# Gitpod Workspace Configuration for Selenium Assignment
+# This sets up a Python environment with Selenium, Chrome, and testing tools.
+# Open this repo in Gitpod: https://gitpod.io/#https://github.com/yourusername/selenium-assignment
+
+image:
+  file: .gitpod.Dockerfile  # Custom Dockerfile for Chrome/Selenium setup (defined below)
+
+# VS Code Extensions to pre-install
+vscode:
+  extensions:
+    - ms-python.python@2023.22.1  # Python support
+    - ms-python.pytest@2023.2.0   # Pytest integration
+    - ms-python.debugpy@2023.3.0  # Python debugging
+    - ms-vscode.vscode-json@2023.7.1  # JSON/YAML support (for configs)
+    - eamodio.gitlens@2023.9.3    # Git enhancements
+
+# Ports to expose (e.g., if you want to view test outputs or a local server)
+ports:
+  - port: 8080
+    onOpen: ignore  # Optional: For any web previews (not needed for tests)
+
+# Tasks to run on workspace start
+tasks:
+  - init: |
+      # Install system dependencies for Chrome/Selenium
+      sudo apt-get update -y
+      sudo apt-get install -y wget gnupg unzip xvfb  # Xvfb for headless browser in cloud
+      
+      # Install Chrome (stable version)
+      wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
+      sudo sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list'
+      sudo apt-get update -y
+      sudo apt-get install -y google-chrome-stable
+      
+      # Install Python dependencies
+      pip install --user -r requirements.txt
+      
+      # Verify setup
+      python -c "import selenium; print('Selenium installed:', selenium.__version__)"
+      python -c "from webdriver_manager.chrome import ChromeDriverManager; print('ChromeDriver ready via webdriver-manager')"
+      
+      # Create folders for outputs
+      mkdir -p screenshots videos
+      
+      echo "✅ Setup complete! Run 'pytest test_scenarios.py -v' to execute tests."
+      echo "Screenshots will appear in the 'screenshots/' folder. Check terminal for logs."
+    
+  - name: Run All Tests
+    command: |
+      pytest test_scenarios.py -v -s  # -s to show print/logs in real-time
+      
+  - name: Run Specific Scenario (e.g., Scenario 1)
+    command: |
+      pytest test_scenarios.py::test_selenium_playground[1] -v -s
+
+# Environment variables (optional, for headless mode or custom configs)
+env:
+  HEADLESS: "true"  # Set to enable headless Chrome by default (uncomment in conftest.py if needed)
+  PYTHONPATH: "${GITPOD_REPO_ROOT}"
